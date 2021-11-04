@@ -40,6 +40,107 @@ local function point_3d_to_2d_y(x, y, z)
   return tx, ty
 end
 
+-- optimise masks
+local opts_mask = {}
+for y = 0,15 do
+  for x = 0,15 do
+    key = y*16+x
+    -- squares
+    opts_mask[key] = {["sF"] = 256}
+    if (y<8) and (x<8) then
+      opts_mask[key]["s8"] = 64
+    end
+    if (y<4) and (x<4) then
+      opts_mask[key]["s4"] = 16
+    end
+    if (y<2) and (x<2) then
+      opts_mask[key]["s2"] = 4
+    end
+    -- horizontal lines
+    if (y==0) then
+      opts_mask[key]["hF"] = 16
+    end
+    if (y==0) and (x<8) then
+      opts_mask[key]["h8"] = 8
+    end
+    if (y==0) and (x<4) then
+      opts_mask[key]["h4"] = 4
+    end
+    if (y==0) and (x<2) then
+      opts_mask[key]["h2"] = 2
+    end
+    -- vertical lines
+    if (x==0) then
+      opts_mask[key]["vF"] = 16
+    end
+    if (x==0) and (y<8) then
+      opts_mask[key]["v8"] = 8
+    end
+    if (x==0) and (y<4) then
+      opts_mask[key]["v4"] = 4
+    end
+    if (x==0) and (y<2) then
+      opts_mask[key]["v2"] = 2
+    end
+  end
+end
+opts_mask[0][""] = 1
+
+local function get_best_opt(tp, tx, ty, base)
+  local opts = {
+    ["sF"] = 256,
+    ["s8"] = 64,
+    ["s4"] = 16,
+    ["s2"] = 4,
+    
+    ["hF"] = 16,
+    ["h8"] = 8,
+    ["h4"] = 4,
+    ["h2"] = 2,
+    
+    ["vF"] = 16,
+    ["v8"] = 8,
+    ["v4"] = 4,
+    ["v2"] = 2,
+    
+    [""] = 1,
+  }
+  -- look for usable optimises
+  for y = 0,15 do
+    for x = 0,15 do
+      if (tp[ty+y]==nil) or (tp[ty+y][tx+x]~=base) then
+        local mask = opts_mask[y*16+x]
+        for key,_ in pairs(mask) do
+          opts[key] = 0
+        end
+      end
+    end
+  end
+  
+  -- find best optimise from aviable
+  local best_points = 0
+  local best_opt = ""
+  for opt,points in pairs(opts) do
+    if points>best_points then
+      best_points = points
+      best_opt = opt
+    end
+  end
+  
+  -- remove opt from tp list
+  if best_opt~="" then
+    for y = 0,15 do
+      for x = 0,15 do
+        if opts_mask[y*16+x][best_opt] then
+          tp[ty+y][tx+x] = 1 -- ignore it next time
+        end
+      end
+    end
+  end
+  
+  return best_opt
+end
+
 function sculpture.to_texturestring(data, axis)
 	if not data then
 		minetest.log("error", "[sculpture] missing data")
@@ -58,35 +159,64 @@ function sculpture.to_texturestring(data, axis)
     point_3d_to_2d = point_3d_to_2d_z
     --print("use z axis "..axis)
   end
-  local colorize = {}
-	local texture = {"[combine:64x64"}
+  local tp = {}
+  local colors = {}
+  for ty = 0,63 do
+    tp[ty] = {}
+    for tx = 0,63 do
+      tp[ty][tx] = 1
+    end
+  end
 	for z = 0, 15 do
 	  for y = 0, 15 do
 		  for x = 0, 15 do
         local point = data.grid[z][y][x]
         if point==0 then
           local tx, ty = point_3d_to_2d(x,y,z)
-          --table.insert(texture, ":"..tx..","..ty.."=sculpture_makealpha.png")
-          table.insert(texture, ":"..tx..","..ty.."=a.png")
+          tp[ty][tx] = 0
         elseif type(point) == "string" then
           -- all sides colored
           local tx, ty = point_3d_to_2d(x,y,z)
-          --table.insert(colorize, "^(([combine:64x64:"..tx..","..ty.."=sculpture_white.png)^[colorize:#"..point..")")
-          table.insert(colorize, "^(([combine:64x64:"..tx..","..ty.."=w.png)^[colorize:#"..point..")")
+          tp[ty][tx] = point
+          colors[point] = {}
         elseif type(point) == "table" then
           -- only some sides can be colored
           if type(point[axis]=="string") then
             local tx, ty = point_3d_to_2d(x,y,z)
-            --table.insert(colorize, "^(([combine:64x64:"..tx..","..ty.."=sculpture_white.png)^[colorize:#"..point[axis]..")")
-            table.insert(colorize, "^(([combine:64x64:"..tx..","..ty.."=w.png)^[colorize:#"..point[axis]..")")
+            tp[ty][tx] = point[axis]
+            colors[point[axis]] = {}
           end
         end
       end
 		end
 	end
-	table.insert(texture, ")^[makealpha:1,1,1)")
-	--print(table.concat(t))
-	return "("..material_data.textures[axis].."^("..table.concat(texture)..table.concat(colorize)
+  
+  local cuts = {}
+  for ty = 0,63 do
+    for tx = 0,63 do
+      base = tp[ty][tx]
+      if (base~=1) then
+        local opt = get_best_opt(tp, tx, ty, base)
+        if (base == 0) then
+          table.insert(cuts, ":"..tx..","..ty.."=a"..opt..".png")
+        else
+          table.insert(colors[base], ":"..tx..","..ty.."=w"..opt..".png")
+        end
+      end
+    end
+  end
+  --print(dump(cuts))
+  
+  local texture = ""..material_data.textures[axis]
+  if #cuts>0 then
+	  texture = "("..texture.."^([combine:64x64"..table.concat(cuts)..")^[makealpha:1,1,1)"
+  end
+  for color, data in pairs(colors) do
+    texture = texture .. "^(([combine:64x64:"..table.concat(data)..")^[colorize:#"..color..")"
+  end
+  
+  --print(string.len(texture))
+  return texture
 end
 
 local function add_point(points, from_pos, x, y, z, axis)
