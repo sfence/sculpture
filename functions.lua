@@ -1,4 +1,6 @@
 
+local S = sculpture.translator
+
 function sculpture.compress(string)
   return minetest.encode_base64(minetest.compress(string, "deflate"))
 end
@@ -318,15 +320,52 @@ function sculpture.find_pointed_part(sculture_grid, from_pos, from_dir, to_pos)
   return pointed
 end
 
-function sculpture.tool_cut_point(itemstack, material, point)
+local inv_next_row_offset = 8
+if minetest.get_modpath("hades_core") then
+  inv_next_row_offset = 10
+end
+
+local function send_chat(puncher, msg)
+  local player_name = puncher:get_player_name()
+  if player_name~="" then
+    minetest.chat_send_player(player_name, msg)
+  end
+end
+
+function sculpture.tool_cut_point(puncher, itemstack, material, point)
   local def = itemstack:get_definition()
   if (not material) or (not def._sculpture_tool.category_name[material.category]) then
-    print("Missing material or category.")
+    send_chat(puncher, S("Looks like this tool is useless for this."))
     return point
   end
   if def._sculpture_tool.category_name[material.category] < material.strength then
-    print("Too weak tool for this material.")
+    send_chat(puncher, S("Too weak tool for this material."))
     return point
+  end
+  -- check interval
+  if def._sculpture_tool.interval then
+    local meta = itemstack:get_meta()
+    local last_time = meta:get_float("last_punch")
+    local gametime = minetest.get_gametime()
+    if (gametime-last_time)<def._sculpture_tool.interval then
+      return point
+    end
+    meta:set_float("last_punch", gametime)
+  end
+  if def._sculpture_tool.support_tool then
+    -- look for support tool
+    local inv = puncher:get_inventory()
+    local support_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local support_def = support_item:get_definition()
+    
+    if (not support_def._sculpture_support_tool) 
+        or (support_def._sculpture_support_tool.category_name~=def._sculpture_tool.support_tool) then
+      send_chat(puncher, S("You have to use some support tool. What about something like").." "..S(def._sculpture_tool.support_tool).."?")
+      return point
+    end
+    local wear = support_def._sculpture_support_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
+    support_item:add_wear(wear)
+    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
   end
   local wear = def._sculpture_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
   itemstack:add_wear(wear)

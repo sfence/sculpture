@@ -13,7 +13,7 @@ if true then
         damage_groups = {cracky = 4},
         punch_attack_uses = 512,
       },
-      _sculpture_tool = {
+      _sculpture_support_tool = {
         category_name = "hammer",
         wear = 2
       },
@@ -33,6 +33,7 @@ if true then
         category_name = {metal=5},
         interval = 1,
         wear = 16,
+        support_tool = "hammer",
         on_use = sculpture.tool_cut_point,
       },
     })

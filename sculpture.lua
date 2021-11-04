@@ -134,22 +134,18 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
           grid = node_meta:get_string("grid_3d")
         }
         data.grid = minetest.deserialize(sculpture.decompress(data.grid))
-        data.grid[pointed.z][pointed.y][pointed.x] = def._sculpture_tool.on_use(wield_item, sculpture.materials[data.material], data.grid[pointed.z][pointed.y][pointed.x])
-        --print(dump(data.grid))
-        --print(minetest.serialize(data.grid))
+        data.grid[pointed.z][pointed.y][pointed.x] = def._sculpture_tool.on_use(puncher, wield_item, sculpture.materials[data.material], data.grid[pointed.z][pointed.y][pointed.x])
         local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
-        minetest.deserialize(sculpture.decompress(grid_string))
-        
-        --print(grid_string)
         node_meta:set_string("grid_3d", grid_string)
         self.grid = data.grid
         update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1))
+        puncher:set_wielded_item(wield_item)
       end
     end,
   })
 
 minetest.register_node("sculpture:sculpture",{
-    desc = S("Sculpture"),
+    description = S("Sculpture"),
     tiles = {"sculpture_node.png"},
     inventory_image = "sculpture_node_inv.png",
     drawtype = "glasslike",
@@ -208,7 +204,7 @@ minetest.register_node("sculpture:sculpture",{
 
 -- pedestal for making sculptures
 minetest.register_node("sculpture:pedestal",{
-    desc = S("Sculpture Pedestal"),
+    description = S("Sculpture Pedestal"),
     drawtype = "nodebox",
     node_box = {
       type = "fixed",
@@ -228,7 +224,7 @@ minetest.register_node("sculpture:pedestal",{
     --tiles = {"sculpture_pedestal.png"},
     tiles = {"default_wood.png"},
     
-    groups = {cracky=2},
+    groups = {choppy=2},
     
     on_destruct = function(pos, node)
         
@@ -290,6 +286,8 @@ minetest.register_node("sculpture:pedestal",{
           end
           pos.y = pos.y + 1
           local obj = minetest.add_entity(pos, "sculpture:sculpture_unfinished")
+          wield_item:take_item()
+          puncher:set_wielded_item(wield_item)
         end
       end,
   })
