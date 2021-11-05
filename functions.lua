@@ -348,6 +348,7 @@ function sculpture.tool_cut_point(puncher, itemstack, material, point)
     local last_time = meta:get_float("last_punch")
     local gametime = minetest.get_gametime()
     if (gametime-last_time)<def._sculpture_tool.interval then
+      send_chat(puncher, S("Be patient. This work take some time."))
       return point
     end
     meta:set_float("last_punch", gametime)

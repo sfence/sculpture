@@ -8,6 +8,7 @@ local items = {
 
 if minetest.get_modpath("hades_core") then
   items.steel_ingot = "hades_core:steel_ingot"
+  items.stick = "hades_core:stick"
 end
   
 minetest.register_craft({
