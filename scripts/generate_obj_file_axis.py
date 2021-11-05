@@ -98,12 +98,12 @@ def generate_obj():
     if (axis==3):
       f = f + "usemtl xp\n";
       f = f + "s {}\n".format(s_i+0);
-      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(x*4+1, ti_xx, 1, x*4+2, ti_xy, 1, x*4+3, ti_yy, 1, x*4+4, ti_yx, 1);
+      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(x*4+1, ti_xx, 3, x*4+2, ti_xy, 3, x*4+3, ti_yy, 3, x*4+4, ti_yx, 3);
       s_i = s_i + 1;
     if (axis==4):
       f = f + "usemtl xn\n";
       f = f + "s {}\n".format(s_i+0);
-      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(x*4+8, ti_yx, 2, x*4+7, ti_yy, 2, x*4+6, ti_xy, 2, x*4+5, ti_xx, 2);
+      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(x*4+8, ti_yx, 4, x*4+7, ti_yy, 4, x*4+6, ti_xy, 4, x*4+5, ti_xx, 4);
       s_i = s_i + 1;
   
   for z in range(16):
@@ -118,12 +118,12 @@ def generate_obj():
     if (axis==5):
       f = f + "usemtl zp\n";
       f = f + "s {}\n".format(s_i+0);
-      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(z*4+1, ti_xx, 1, z*4+2, ti_xy, 1, z*4+3, ti_yy, 1, z*4+4, ti_yx, 1);
+      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(z*4+1, ti_xx, 5, z*4+2, ti_xy, 5, z*4+3, ti_yy, 5, z*4+4, ti_yx, 5);
       s_i = s_i + 1;
     if (axis==6):
       f = f + "usemtl zn\n";
       f = f + "s {}\n".format(s_i+0);
-      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(z*4+8, ti_yx, 2, z*4+7, ti_yy, 2, z*4+6, ti_xy, 2, z*4+5, ti_xx, 2);
+      f = f + "f {}/{}/{} {}/{}/{} {}/{}/{} {}/{}/{}\n".format(z*4+8, ti_yx, 6, z*4+7, ti_yy, 6, z*4+6, ti_xy, 6, z*4+5, ti_xx, 6);
       s_i = s_i + 1;
     
   
