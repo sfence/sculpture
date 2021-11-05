@@ -41,9 +41,9 @@ if minetest.get_modpath("hades_core") then
   sculpture.register_material("tin", {
       item_name = "hades_core:tinblock",
       textures = { -- 64x64, y-,y+, x-,x+, z-,z+
-          "sculpture_tin.png","sculpture_tin.png",
-          "sculpture_tin.png","sculpture_tin.png",
-          "sculpture_tin.png","sculpture_tin.png",
+          "sculpture_tin_hades.png","sculpture_tin_hades.png",
+          "sculpture_tin_hades.png","sculpture_tin_hades.png",
+          "sculpture_tin_hades.png","sculpture_tin_hades.png",
         },
       category = "metal",
       strength = 1,
