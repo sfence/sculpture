@@ -5,6 +5,7 @@ local items = {
   steel_ingot = "default:steel_ingot",
   stick = "default:stick",
   iron_stick = "default:steel_ingot", 
+  diamond = "default:diamond",
 }
 
 if minetest.get_modpath("darkage") then
@@ -15,6 +16,7 @@ if minetest.get_modpath("hades_core") then
   items.steel_ingot = "hades_core:steel_ingot"
   items.stick = "hades_core:stick"
   items.iron_stick = "hades_core:steel_rod"
+  items.diamond = "hades_core:diamond"
 end
   
 minetest.register_craft({
@@ -40,6 +42,14 @@ if true then
       recipe = {
         {items.iron_stick},
         {items.iron_stick},
+      },
+    })
+  minetest.register_craft({
+      output = "sculpture:chisel_stonemason_diamond",
+      recipe = {
+        {items.iron_stick},
+        {items.iron_stick},
+        {items.diamond},
       },
     })
 end

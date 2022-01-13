@@ -36,8 +36,17 @@ if minetest.get_modpath("default") then
       category = "metal",
       strength = 1,
     })
-end
-if minetest.get_modpath("hades_core") then
+  sculpture.register_material("gold", {
+      item_name = "default:goldblock",
+      textures = { -- 64x64, y-,y+, x-,x+, z-,z+
+          "sculpture_gold.png","sculpture_gold.png",
+          "sculpture_gold.png","sculpture_gold.png",
+          "sculpture_gold.png","sculpture_gold.png",
+        },
+      category = "metal",
+      strength = 2,
+    })
+elseif minetest.get_modpath("hades_core") then
   sculpture.register_material("tin", {
       item_name = "hades_core:tinblock",
       textures = { -- 64x64, y-,y+, x-,x+, z-,z+
@@ -47,6 +56,16 @@ if minetest.get_modpath("hades_core") then
         },
       category = "metal",
       strength = 1,
+    })
+  sculpture.register_material("gold", {
+      item_name = "hades_core:goldblock",
+      textures = { -- 64x64, y-,y+, x-,x+, z-,z+
+          "sculpture_gold.png","sculpture_gold.png",
+          "sculpture_gold.png","sculpture_gold.png",
+          "sculpture_gold.png","sculpture_gold.png",
+        },
+      category = "metal",
+      strength = 2,
     })
 end
 
