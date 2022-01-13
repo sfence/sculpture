@@ -40,7 +40,7 @@ local function sculpture_on_activate(self, pos)
   self.grid = data.grid
   self.material = data.material
   
-  objs = {self}
+  local objs = {self}
   for n=2,6 do
     objs[n] = minetest.add_entity(self.object:get_pos(), "sculpture:sculpture_axis")
     objs[n] = objs[n]:get_luaentity()
@@ -223,6 +223,7 @@ minetest.register_node("sculpture:pedestal",{
     },
     --tiles = {"sculpture_pedestal.png"},
     tiles = {"default_wood.png"},
+    paramtype = "light",
     
     groups = {choppy=2},
     

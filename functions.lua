@@ -196,7 +196,7 @@ function sculpture.to_texturestring(data, axis)
   local cuts = {}
   for ty = 0,63 do
     for tx = 0,63 do
-      base = tp[ty][tx]
+      local base = tp[ty][tx]
       if (base~=1) then
         local opt = get_best_opt(tp, tx, ty, base)
         if (base == 0) then

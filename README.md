@@ -17,19 +17,19 @@ Recipes:
 
 ### Pedestal:
 
-| stick |       | stick |
-|       | stick |       |
-| stick |       | stick |
+| stick |       | stick |  
+|       | stick |       |  
+| stick |       | stick |  
 
 ### Hammer:
 
-| steel_ingot | steel_ingot | steel_ingot |
-| steel_ingot | steel_ingot | steel_ingot |
-|             |    stick    |             |
+| steel_ingot | steel_ingot | steel_ingot |  
+| steel_ingot | steel_ingot | steel_ingot |  
+|             |    stick    |             |  
 
 ### Chisel (stonemason):
 
-| steel_ingot |
+| steel_ingot |  
 | steel_ingot |
 
 Source code:
