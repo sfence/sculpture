@@ -310,7 +310,10 @@ function sculpture.find_pointed_part(sculture_grid, from_pos, from_dir, to_pos)
     y = math.min(y, 15)
     z = math.min(z, 15)
     if sculture_grid[z][y][x]~=0 then
-      pointed = vector.new(x,y,z)
+      pointed = {
+        pos = vector.new(x,y,z),
+        axis = point.axis,
+      }
       --print("point: "..dump(point.pos))
       --print("grid: "..dump(pointed))
       break
@@ -332,7 +335,7 @@ local function send_chat(puncher, msg)
   end
 end
 
-function sculpture.tool_cut_point(puncher, itemstack, material, point)
+function sculpture.tool_callback_point_core(puncher, itemstack, material, point)
   local def = itemstack:get_definition()
   if (not material) or (not def._sculpture_tool.category_name[material.category]) then
     send_chat(puncher, S("Looks like this tool is useless for this."))
@@ -368,8 +371,63 @@ function sculpture.tool_cut_point(puncher, itemstack, material, point)
     support_item:add_wear(wear)
     inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
   end
+  
+  return point, def
+end
+
+function sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+  local def = itemstack:get_definition()
   local wear = def._sculpture_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
   itemstack:add_wear(wear)
+  
+  if itemstack:get_count()==0 then
+    if def._sculpture_tool.break_stack then
+      itemstack:replace(ItemStack(def._sculpture_tool.break_stack))
+    end
+  end
+end
+
+function sculpture.tool_cut_point(puncher, itemstack, material, point, axis)
+  local ret_point, def = sculpture.tool_callback_point_core(puncher, itemstack, material, point)
+  if not def then
+    return ret_point
+  end
+  
+  sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+  
   return 0
+end
+
+function sculpture.tool_paint_point(puncher, itemstack, material, point, axis)
+  if point==0 then
+    -- is cutted out, notning to do
+    return point
+  end
+  
+  local ret_point, def = sculpture.tool_callback_point_core(puncher, itemstack, material, point)
+  if not def then
+    return ret_point
+  end
+  
+  -- do paint
+  if type(point)~="table" then
+    ret_point = {point, point, point, point, point, point}
+  else
+    ret_point = table.copy(point)
+  end
+  
+  if def._sculpture_tool.brush_color then
+    ret_point[axis] = def,_sculpture_tool.brush_color
+  else
+    local meta = itemstack:get_meta()
+    local color = meta:get("color")
+    if color then
+      ret_point[axis] = color
+    end
+  end
+  
+  sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+  
+  return ret_point
 end
 

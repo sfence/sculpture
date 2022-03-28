@@ -4,12 +4,13 @@ local S = sculpture.translator
 local current_version = "16x16x16"
 
 local function update_textures(data, objs)
-  --print("all: "..dump(objs))
+  print("all: "..dump(objs))
   for _,obj in pairs(objs) do
     if not obj.object then
       obj = obj:get_luaentity()
     end
     if obj.axis then
+      print(obj.axis)
       obj.object:set_properties({textures = {sculpture.to_texturestring(data, obj.axis)}})
     end
   end
@@ -134,7 +135,8 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
           grid = node_meta:get_string("grid_3d")
         }
         data.grid = minetest.deserialize(sculpture.decompress(data.grid))
-        data.grid[pointed.z][pointed.y][pointed.x] = def._sculpture_tool.on_use(puncher, wield_item, sculpture.materials[data.material], data.grid[pointed.z][pointed.y][pointed.x])
+        data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x] = def._sculpture_tool.on_use(puncher, wield_item, sculpture.materials[data.material], data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x], pointed.axis)
+        --print(dump(data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x]))
         local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
         node_meta:set_string("grid_3d", grid_string)
         self.grid = data.grid

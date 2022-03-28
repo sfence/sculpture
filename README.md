@@ -10,7 +10,7 @@ Sculpture/statue bases:
 ----------------------
 
 Tin block
-
+Gold block
 
 Recipes:
 --------
