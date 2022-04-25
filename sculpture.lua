@@ -4,14 +4,15 @@ local S = sculpture.translator
 local current_version = "16x16x16"
 
 local function update_textures(data, objs)
-  print("all: "..dump(objs))
+  --print("all: "..dump(objs))
   for _,obj in pairs(objs) do
     if not obj.object then
       obj = obj:get_luaentity()
     end
     if obj.axis then
-      print(obj.axis)
+      --print(obj.axis)
       obj.object:set_properties({textures = {sculpture.to_texturestring(data, obj.axis)}})
+      --print("axis: "..obj.axis.." tex: "..sculpture.to_texturestring(data, obj.axis))
     end
   end
   --print(dump(textures))
@@ -125,7 +126,7 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
       local pointed = sculpture.find_pointed_part(self.grid, from_pos, puncher:get_look_dir(), self.object:get_pos(), puncher)
       
       if pointed then
-        --print(dump(pointed))
+        print(dump(pointed))
         local pos = self.object:get_pos()
         pos.y = pos.y - 1
         local node_meta = minetest.get_meta(pos)

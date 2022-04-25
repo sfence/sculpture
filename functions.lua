@@ -183,7 +183,7 @@ function sculpture.to_texturestring(data, axis)
           colors[point] = {}
         elseif type(point) == "table" then
           -- only some sides can be colored
-          if type(point[axis]=="string") then
+          if type(point[axis])=="string" then
             local tx, ty = point_3d_to_2d(x,y,z)
             tp[ty][tx] = point[axis]
             colors[point[axis]] = {}
@@ -201,20 +201,23 @@ function sculpture.to_texturestring(data, axis)
         local opt = get_best_opt(tp, tx, ty, base)
         if (base == 0) then
           table.insert(cuts, ":"..tx..","..ty.."=a"..opt..".png")
-        else
+        elseif type(base)=="string" then
           table.insert(colors[base], ":"..tx..","..ty.."=w"..opt..".png")
+        elseif type(base)=="table" then
+          table.insert(colors[base[axis]], ":"..tx..","..ty.."=w"..opt..".png")
         end
       end
     end
   end
   --print(dump(cuts))
+  --print(dump(colors))
   
   local texture = ""..material_data.textures[axis]
   if #cuts>0 then
 	  texture = "("..texture.."^([combine:64x64"..table.concat(cuts)..")^[makealpha:1,1,1)"
   end
   for color, data in pairs(colors) do
-    texture = texture .. "^(([combine:64x64:"..table.concat(data)..")^[colorize:#"..color..")"
+    texture = texture .. "^(([combine:64x64"..table.concat(data)..")^[colorize:#"..color..")"
   end
   
   --print(string.len(texture))
@@ -367,9 +370,6 @@ function sculpture.tool_callback_point_core(puncher, itemstack, material, point)
       send_chat(puncher, S("You have to use some support tool. What about something like").." "..S(def._sculpture_tool.support_tool).."?")
       return point
     end
-    local wear = support_def._sculpture_support_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
-    support_item:add_wear(wear)
-    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
   end
   
   return point, def
@@ -384,6 +384,24 @@ function sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
     if def._sculpture_tool.break_stack then
       itemstack:replace(ItemStack(def._sculpture_tool.break_stack))
     end
+  end
+  
+  if def._sculpture_tool.support_tool then
+    -- wear support tool
+    local inv = puncher:get_inventory()
+    local support_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local support_def = support_item:get_definition()
+    
+    local wear = support_def._sculpture_support_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
+    support_item:add_wear(wear)
+    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
+    
+    if support_item:get_count()==0 then
+      if def._sculpture_support_tool.break_stack then
+        support_item:replace(ItemStack(def._sculpture_support_tool.break_stack))
+      end
+    end
+    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
   end
 end
 
@@ -417,7 +435,7 @@ function sculpture.tool_paint_point(puncher, itemstack, material, point, axis)
   end
   
   if def._sculpture_tool.brush_color then
-    ret_point[axis] = def,_sculpture_tool.brush_color
+    ret_point[axis] = def._sculpture_tool.brush_color
   else
     local meta = itemstack:get_meta()
     local color = meta:get("color")
