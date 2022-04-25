@@ -303,12 +303,22 @@ function sculpture.find_pointed_part(sculture_grid, from_pos, from_dir, to_pos)
   end
   
   -- check colisions and grid
+  --print(dump(from_dir))
   local pointed = nil
   --print(dump(points))
   for _, point in pairs(points) do
     x = math.floor((point.pos.x + 0.5) * 16)
+    if point.axis==3 then
+      x = x - 1
+    end
     y = math.floor((point.pos.y + 0.5) * 16)
+    if point.axis==1 then
+      y = y - 1
+    end
     z = math.floor((point.pos.z + 0.5) * 16)
+    if point.axis==5 then
+      z = z - 1
+    end
     x = math.min(x, 15)
     y = math.min(y, 15)
     z = math.min(z, 15)

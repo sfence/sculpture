@@ -126,7 +126,7 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
       local pointed = sculpture.find_pointed_part(self.grid, from_pos, puncher:get_look_dir(), self.object:get_pos(), puncher)
       
       if pointed then
-        print(dump(pointed))
+        --print(dump(pointed))
         local pos = self.object:get_pos()
         pos.y = pos.y - 1
         local node_meta = minetest.get_meta(pos)
