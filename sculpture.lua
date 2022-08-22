@@ -3,6 +3,8 @@ local S = sculpture.translator
 
 local current_version = "16x16x16"
 
+sculpture.current_version = current_version
+
 local function update_textures(data, objs)
   --print("all: "..dump(objs))
   for _,obj in pairs(objs) do
