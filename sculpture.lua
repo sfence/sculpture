@@ -120,7 +120,7 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
       local wield_item = puncher:get_wielded_item()
       local name = wield_item:get_name()
       local def = minetest.registered_items[name]
-      if (not def) or (not def._sculpture_tool) then
+      if (not def) or (not def._sculpture_tool) or (not def._sculpture_tool.on_use) then
         return
       end
       local from_pos = puncher:get_pos()
@@ -138,7 +138,39 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
           grid = node_meta:get_string("grid_3d")
         }
         data.grid = minetest.deserialize(sculpture.decompress(data.grid))
-        data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x] = def._sculpture_tool.on_use(puncher, wield_item, sculpture.materials[data.material], data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x], pointed.axis)
+        def._sculpture_tool.on_use(puncher, wield_item, sculpture.materials[data.material], data.grid, pointed)
+        --print(dump(data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x]))
+        local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
+        node_meta:set_string("grid_3d", grid_string)
+        self.grid = data.grid
+        update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1))
+        puncher:set_wielded_item(wield_item)
+      end
+    end,
+    on_rightclick = function(self, puncher)
+      --print("on_rightclick")
+      local wield_item = puncher:get_wielded_item()
+      local name = wield_item:get_name()
+      local def = minetest.registered_items[name]
+      if (not def) or (not def._sculpture_tool) or (not def._sculpture_tool.on_place) then
+        return
+      end
+      local from_pos = puncher:get_pos()
+      from_pos.y = from_pos.y + puncher:get_properties().eye_height
+      local pointed = sculpture.find_pointed_part(self.grid, from_pos, puncher:get_look_dir(), self.object:get_pos(), puncher)
+      
+      if pointed then
+        --print(dump(pointed))
+        local pos = self.object:get_pos()
+        pos.y = pos.y - 1
+        local node_meta = minetest.get_meta(pos)
+        local data = {
+          version = node_meta:get_string("version"),
+          material = node_meta:get_string("material"),
+          grid = node_meta:get_string("grid_3d")
+        }
+        data.grid = minetest.deserialize(sculpture.decompress(data.grid))
+        def._sculpture_tool.on_place(puncher, wield_item, sculpture.materials[data.material], data.grid, pointed)
         --print(dump(data.grid[pointed.pos.z][pointed.pos.y][pointed.pos.x]))
         local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
         node_meta:set_string("grid_3d", grid_string)

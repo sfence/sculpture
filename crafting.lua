@@ -6,7 +6,13 @@ local items = {
   stick = "default:stick",
   iron_stick = "default:steel_ingot", 
   diamond = "default:diamond",
+  
+  steel_strip = "default:steel_ingot",
 }
+
+if minetest.get_modpath("basic_materials") then
+  items.iron_stick = "basic_materials:steel_bar"
+end
 
 if minetest.get_modpath("darkage") then
   items.iron_stick = "darkage:iron_stick"
@@ -17,6 +23,12 @@ if minetest.get_modpath("hades_core") then
   items.stick = "hades_core:stick"
   items.iron_stick = "hades_core:steel_rod"
   items.diamond = "hades_core:diamond"
+  
+  items.steel_strip = "hades_core:steel_strip"
+end
+
+if minetest.get_modpath("basic_materials") then
+  items.steel_strip = "basic_materials:steel_strip"
 end
   
 minetest.register_craft({
@@ -50,6 +62,14 @@ if true then
         {items.iron_stick},
         {items.iron_stick},
         {items.diamond},
+      },
+    })
+  minetest.register_craft({
+      output = "sculpture:spatula",
+      recipe = {
+        {items.steel_strip, items.steel_strip, items.steel_strip},
+        {"", items.steel_strip, ""},
+        {"", items.stick, ""},
       },
     })
 end

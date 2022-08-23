@@ -13,6 +13,8 @@ Sculpture/statue bases:
 
 Tin block
 Gold block
+Clay
+Clay lump
 
 Recipes:
 --------
@@ -33,6 +35,12 @@ Recipes:
 
 | steel_ingot |  
 | steel_ingot |
+
+### Spatula:
+
+| steel_ingot | steel_ingot | steel_ingot |  
+|             | steel_ingot |             |  
+|             |    stick    |             |  
 
 Source code:
 -----------------------

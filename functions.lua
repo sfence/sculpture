@@ -348,15 +348,15 @@ local function send_chat(puncher, msg)
   end
 end
 
-function sculpture.tool_callback_point_core(puncher, itemstack, material, point)
+function sculpture.tool_callback_point_core(puncher, itemstack, material)
   local def = itemstack:get_definition()
   if (not material) or (not def._sculpture_tool.category_name[material.category]) then
     send_chat(puncher, S("Looks like this tool is useless for this."))
-    return point
+    return nil
   end
   if def._sculpture_tool.category_name[material.category] < material.strength then
     send_chat(puncher, S("Too weak tool for this material."))
-    return point
+    return nil
   end
   -- check interval
   if def._sculpture_tool.interval then
@@ -365,7 +365,7 @@ function sculpture.tool_callback_point_core(puncher, itemstack, material, point)
     local gametime = minetest.get_gametime()
     if (gametime-last_time)<def._sculpture_tool.interval then
       send_chat(puncher, S("Be patient. This work take some time."))
-      return point
+      return nil
     end
     meta:set_float("last_punch", gametime)
   end
@@ -378,14 +378,14 @@ function sculpture.tool_callback_point_core(puncher, itemstack, material, point)
     if (not support_def._sculpture_support_tool) 
         or (support_def._sculpture_support_tool.category_name~=def._sculpture_tool.support_tool) then
       send_chat(puncher, S("You have to use some support tool. What about something like").." "..S(def._sculpture_tool.support_tool).."?")
-      return point
+      return nil
     end
   end
   
-  return point, def
+  return def
 end
 
-function sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+function sculpture.tool_callback_point_wear(puncher, itemstack, material)
   local def = itemstack:get_definition()
   local wear = def._sculpture_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
   itemstack:add_wear(wear)
@@ -415,29 +415,36 @@ function sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
   end
 end
 
-function sculpture.tool_cut_point(puncher, itemstack, material, point, axis)
-  local ret_point, def = sculpture.tool_callback_point_core(puncher, itemstack, material, point)
+function sculpture.tool_cut_point(puncher, itemstack, material, grid, pointed)
+  local def = sculpture.tool_callback_point_core(puncher, itemstack, material)
   if not def then
-    return ret_point
+    return
   end
   
-  sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+  sculpture.tool_callback_point_wear(puncher, itemstack, material)
   
-  return 0
+  grid[pointed.pos.z][pointed.pos.y][pointed.pos.x] = 0
+  
+  if material.nub_material then
+    local inv = puncher:get_inventory()
+    inv:add_item(puncher:get_wield_list(), ItemStack(material.nub_material))
+  end
 end
 
-function sculpture.tool_paint_point(puncher, itemstack, material, point, axis)
+function sculpture.tool_paint_point(puncher, itemstack, material, grid, pointed)
+  local point = grid[pointed.pos.z][pointed.pos.y][pointed.pos.x]
   if point==0 then
     -- is cutted out, notning to do
-    return point
+    return 
   end
   
-  local ret_point, def = sculpture.tool_callback_point_core(puncher, itemstack, material, point)
+  local def = sculpture.tool_callback_point_core(puncher, itemstack, material, pointed.pos)
   if not def then
-    return ret_point
+    return 
   end
   
   -- do paint
+  local ret_point
   if type(point)~="table" then
     ret_point = {point, point, point, point, point, point}
   else
@@ -445,17 +452,145 @@ function sculpture.tool_paint_point(puncher, itemstack, material, point, axis)
   end
   
   if def._sculpture_tool.brush_color then
-    ret_point[axis] = def._sculpture_tool.brush_color
+    ret_point[pointed.axis] = def._sculpture_tool.brush_color
   else
     local meta = itemstack:get_meta()
     local color = meta:get("color")
     if color then
-      ret_point[axis] = color
+      ret_point[pointed.axis] = color
     end
   end
   
-  sculpture.tool_callback_point_wear(puncher, itemstack, material, point)
+  sculpture.tool_callback_point_wear(puncher, itemstack, material)
   
-  return ret_point
+  grid[pointed.pos.z][pointed.pos.y][pointed.pos.x] = ret_point
 end
 
+local function is_fill(grid, point)
+  if     (point.x>=0) and (point.x<16)
+     and (point.y>=0) and (point.y<16)
+     and (point.z>=0) and (point.z<16) then
+    return grid[point.z][point.y][point.x]~=0
+  end
+  return false
+end
+
+function sculpture.tool_add_point(puncher, itemstack, material, grid, pointed)
+  local pos = table.copy(pointed.pos)
+  
+  print(dump(pointed))
+  
+  if pointed.axis==1 then
+    pos.y = pos.y + 1
+    if pos.y>15 then
+      return
+    end
+  elseif pointed.axis==2 then
+    pos.y = pos.y - 1
+    if pos.y<0 then
+      return
+    end
+  elseif pointed.axis==3 then
+    pos.x = pos.x + 1
+    if pos.x>15 then
+      return
+    end
+  elseif pointed.axis==4 then
+    pos.x = pos.x - 1
+    if pos.x<0 then
+      return
+    end
+  elseif pointed.axis==5 then
+    pos.z = pos.z + 1
+    if pos.z>15 then
+      return
+    end
+  else
+    pos.z = pos.z - 1
+    if pos.z<0 then
+      return
+    end
+  end
+  
+  print(dump(pos))
+  
+  -- look for material for add
+  local inv = puncher:get_inventory()
+  local material_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+  local material_def = material_item:get_definition()
+  
+  if material_def and material_def._sculpture_material and (material_def._sculpture_material.name == material.nub_material) then
+    if material_def._sculpture_material.change then
+      material_item = ItemStack(materials_def._sculpture_material.change)
+      material_def = material_item:get_definition()
+    end
+  end
+  
+  local def = sculpture.tool_callback_point_core(puncher, itemstack, material)
+  if not def then
+    return 
+  end
+  
+  sculpture.tool_callback_point_wear(puncher, itemstack, material)
+  
+  -- do add
+  if grid[pos.z][pos.y][pos.x]==0 then
+    grid[pos.z][pos.y][pos.x] = 1
+    
+    material_item:take_item(1)
+    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, material_item)
+  end
+  
+  -- check around
+  pos = table.copy(pointed.pos)
+  if grid[pos.z][pos.y][pos.x]~=0 then
+    local fill = true
+    pos.x = pos.x + 1
+    fill = fill and is_fill(grid, pos)
+    pos.x = pos.x - 2
+    fill = fill and is_fill(grid, pos)
+    pos.x = pos.x + 1
+    fill = fill and is_fill(grid, pos)
+    pos.y = pos.y + 1
+    fill = fill and is_fill(grid, pos)
+    pos.y = pos.y - 2
+    fill = fill and is_fill(grid, pos)
+    pos.y = pos.y + 1
+    fill = fill and is_fill(grid, pos)
+    pos.z = pos.z + 1
+    fill = fill and is_fill(grid, pos)
+    pos.z = pos.z - 2
+    fill = fill and is_fill(grid, pos)
+    pos.z = pos.z + 1
+    fill = fill and is_fill(grid, pos)
+    
+    if fill then
+      pos = pointed.pos
+      grid[pos.z][pos.y][pos.x] = 1
+    end
+  end
+  
+  return
+end
+
+function sculpture.tool_cut_or_add_point(puncher, itemstack, material, grid, pointed)
+  local add = false
+  if material.nub_material then
+    -- look for material for add
+    local inv = puncher:get_inventory()
+    local material_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local material_def = material_item:get_definition()
+    
+    if material_def and material_def._sculpture_material and (material_def._sculpture_material.name == material.nub_material) then
+      if material_def._sculpture_material.change then
+        inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, ItemStack(materials_def._sculpture_material.change))
+      end
+    end
+  end
+  
+  if add then
+    sculpture.tool_add_point(puncher, itemstack, material, grid, pointed)
+  else
+    sculpture.tool_cut_point(puncher, itemstack, material, grid, pointed)
+  end
+end
