@@ -5,13 +5,13 @@ local current_version = "16x16x16"
 
 sculpture.current_version = current_version
 
-local function update_textures(data, objs)
+local function update_textures(data, objs, item_name)
   --print("all: "..dump(objs))
   for _,obj in pairs(objs) do
     if not obj.object then
       obj = obj:get_luaentity()
     end
-    if obj.axis then
+    if obj.axis and obj.item_name and obj.item_name==item_name then
       --print(obj.axis)
       obj.object:set_properties({textures = {sculpture.to_texturestring(data, obj.axis)}})
       --print("axis: "..obj.axis.." tex: "..sculpture.to_texturestring(data, obj.axis))
@@ -45,15 +45,17 @@ local function sculpture_on_activate(self, pos)
   self.material = data.material
   
   local objs = {self}
+  local item_name = node_meta:get("item_name") or "sculpture:sculpture"
   for n=2,6 do
     objs[n] = minetest.add_entity(self.object:get_pos(), "sculpture:sculpture_axis")
     objs[n] = objs[n]:get_luaentity()
   end
   for n=1,6 do
     objs[n].axis = n
+    objs[n].item_name = item_name
     objs[n].object:set_properties({mesh = "sculpture_sculpture_mesh_axis_"..n..".obj"})
   end
-  update_textures(data, objs)
+  update_textures(data, objs, item_name)
   
   return objs
 end
@@ -143,7 +145,7 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
         local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
         node_meta:set_string("grid_3d", grid_string)
         self.grid = data.grid
-        update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1))
+        update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1), node_meta:get("item_name") or "sculpture:sculpture")
         puncher:set_wielded_item(wield_item)
       end
     end,
@@ -175,7 +177,7 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
         local grid_string = sculpture.compress(minetest.serialize(data.grid)) 
         node_meta:set_string("grid_3d", grid_string)
         self.grid = data.grid
-        update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1))
+        update_textures(data, minetest.get_objects_inside_radius(self.object:get_pos(), 0.1), node_meta:get("item_name") or "sculpture:sculpture")
         puncher:set_wielded_item(wield_item)
       end
     end,
@@ -290,7 +292,8 @@ minetest.register_node("sculpture:pedestal",{
             end
           end
           
-          local itemstack = ItemStack("sculpture:sculpture")
+          local itemstack = node_meta:get("item_name") or "sculpture:sculpture"
+          itemstack = ItemStack(itemstack)
           local item_meta = itemstack:get_meta()
           
           item_meta:set_string("version", node_meta:get_string("version"))
@@ -316,6 +319,7 @@ minetest.register_node("sculpture:pedestal",{
           end
           node_meta:set_int("has_sculpture", 1)
           if not material.on_init then
+            node_meta:set_string("item_name", "sculpture:sculpture")
             node_meta:set_string("version", current_version)
             node_meta:set_string("material", material_name)
             node_meta:set_string("grid_3d", sculpture.compress(minetest.serialize(sculpture.init_grid())))
