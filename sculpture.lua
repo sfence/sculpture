@@ -5,7 +5,7 @@ local current_version = "16x16x16"
 
 sculpture.current_version = current_version
 
-local function update_textures(data, objs, item_name)
+function sculpture.update_textures(data, objs, item_name)
   --print("all: "..dump(objs))
   for _,obj in pairs(objs) do
     if not obj.object then
@@ -20,7 +20,9 @@ local function update_textures(data, objs, item_name)
   --print(dump(textures))
 end
 
-local function sculpture_on_activate(self, pos)
+local update_textures = sculpture.update_textures
+
+function sculpture.sculpture_on_activate(self, pos)
   local node_meta = minetest.get_meta(pos)
   local data = {
     version = node_meta:get_string("version"),
@@ -29,6 +31,7 @@ local function sculpture_on_activate(self, pos)
   }
   if (data.grid=="") then
     -- something bad happen, sculpture entity without node
+    minetest.log("error", "[sculpture] Sculpture entity "..self.name.." without valid node "..minetest.pos_to_string(pos)..". Removed.")
     self.object:remove()
     return
   end
@@ -59,6 +62,8 @@ local function sculpture_on_activate(self, pos)
   
   return objs
 end
+
+local sculpture_on_activate = sculpture.sculpture_on_activate
 
 -- sculpture by axis show
 minetest.register_entity("sculpture:sculpture_axis", {
@@ -197,6 +202,7 @@ minetest.register_node("sculpture:sculpture",{
       local node_meta = minetest.get_meta(pos)
       local item_meta = itemstack:get_meta()
       
+      node_meta:set_string("item_name", "sculpture:sculpture")
       node_meta:set_string("version", item_meta:get_string("version"))
       node_meta:set_string("material", item_meta:get_string("material"))
       node_meta:set_string("grid_3d", item_meta:get_string("grid_3d"))
@@ -211,7 +217,7 @@ minetest.register_node("sculpture:sculpture",{
       local objs = minetest.get_objects_inside_radius(pos, 0.1)
       for _,obj in pairs(objs) do
         local luaent = obj:get_luaentity()
-        if luaent and 
+        if luaent and (luaent.item_name=="sculpture:sculpture") and
             ((luaent.name=="sculpture:sculpture_expo")
             or (luaent.name=="sculpture:sculpture_axis")) then
           obj:set_rotation(rot)
