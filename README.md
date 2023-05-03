@@ -2,11 +2,11 @@ Minetest mod: sculpture
 =======================
 This mod add players ability to make their oven sculpture/statue.
 
-To make sculpture, place pedestal and punch it with sculpture base material. After it, take chisel and hammer (below chisel in inventory) and cut out excessing material to make final sculpture. When sculpture is finished, punch pedestal again to get it like item into inventory. Finished sculpture can be place like node or place back to pedestal (by punch pedestal with sculpture in hand).
+To make sculpture, place pedestal and punch it with sculpture base material. After it, take chisel and hammer (below chisel in inventory or in second hand if offhand mod is enabled) and cut out excessing material to make final sculpture. When sculpture is finished, punch pedestal again to get it like item into inventory. Finished sculpture can be place like node or place back to pedestal (by punch pedestal with sculpture in hand).
 
-If mode painting v3 is installed, oil colors can be used for painting on sculpture.
+If the painting v3 mod is installed, oil colors can be used for painting on sculpture.
 
-Sculpture node uses 6 entities. So, if you want to have many sculptures near to each others, it can be necessary to adjust server number of objects limit (max_objects_per_block).
+Sculpture node uses 6 entities. So, if you want to have many sculptures near to each others, it can be necessary to adjust server number of objects limit (`max_objects_per_block`).
 
 Sculpture/statue bases:
 ----------------------

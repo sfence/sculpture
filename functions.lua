@@ -341,6 +341,31 @@ if minetest.get_modpath("hades_core") then
   inv_next_row_offset = 10
 end
 
+sculpture.get_support_item = function (puncher)
+  local inv = puncher:get_inventory()
+  return inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+end
+
+sculpture.set_support_item = function (puncher, support_item)
+  local inv = puncher:get_inventory()
+  inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
+end
+sculpture.no_support_itme_msg_end = S("Support item should be placed under tool in you inventory.")
+
+if minetest.get_modpath("offhand") then
+  sculpture.get_support_item = function (puncher)
+    local inv = puncher:get_inventory()
+    return inv:get_stack("offhand", 1)
+  end
+
+  sculpture.set_support_item = function (puncher, support_item)
+    local inv = puncher:get_inventory()
+    inv:set_stack("offhand", 1, support_item)
+  end
+
+  sculpture.no_support_itme_msg_end = S("Support item should be placed in your second hand.")
+end
+
 local function send_chat(puncher, msg)
   local player_name = puncher:get_player_name()
   if player_name~="" then
@@ -371,13 +396,12 @@ function sculpture.tool_callback_point_core(puncher, itemstack, material)
   end
   if def._sculpture_tool.support_tool then
     -- look for support tool
-    local inv = puncher:get_inventory()
-    local support_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local support_item = sculpture.get_support_item(puncher)
     local support_def = support_item:get_definition()
     
     if (not support_def._sculpture_support_tool) 
         or (support_def._sculpture_support_tool.category_name~=def._sculpture_tool.support_tool) then
-      send_chat(puncher, S("You have to use some support tool. What about something like").." "..S(def._sculpture_tool.support_tool).."?")
+      send_chat(puncher, S("You have to use some support tool. What about something like").." "..S(def._sculpture_tool.support_tool).."? "..sculpture.no_support_itme_msg_end)
       return nil
     end
   end
@@ -398,20 +422,19 @@ function sculpture.tool_callback_point_wear(puncher, itemstack, material)
   
   if def._sculpture_tool.support_tool then
     -- wear support tool
-    local inv = puncher:get_inventory()
-    local support_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local support_item = sculpture.get_support_item(puncher)
     local support_def = support_item:get_definition()
     
     local wear = support_def._sculpture_support_tool.wear*(def._sculpture_tool.category_name[material.category]-material.strength+1)
     support_item:add_wear(wear)
-    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
+    sculpture.set_support_item(puncher, support_item)
     
     if support_item:get_count()==0 then
       if def._sculpture_support_tool.break_stack then
         support_item:replace(ItemStack(def._sculpture_support_tool.break_stack))
       end
     end
-    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, support_item)
+    sculpture.set_support_item(puncher, support_item)
   end
 end
 
@@ -478,7 +501,7 @@ end
 function sculpture.tool_add_point(puncher, itemstack, material, grid, pointed)
   local pos = table.copy(pointed.pos)
   
-  print(dump(pointed))
+  --print(dump(pointed))
   
   if pointed.axis==1 then
     pos.y = pos.y + 1
@@ -512,11 +535,10 @@ function sculpture.tool_add_point(puncher, itemstack, material, grid, pointed)
     end
   end
   
-  print(dump(pos))
+  --print(dump(pos))
   
   -- look for material for add
-  local inv = puncher:get_inventory()
-  local material_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+  local material_item = sculpture.get_support_item(puncher)
   local material_def = material_item:get_definition()
   
   if material_def and material_def._sculpture_material and (material_def._sculpture_material.name == material.nub_material) then
@@ -538,7 +560,7 @@ function sculpture.tool_add_point(puncher, itemstack, material, grid, pointed)
     grid[pos.z][pos.y][pos.x] = 1
     
     material_item:take_item(1)
-    inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, material_item)
+    sculpture.set_support_item(puncher, material_item)
   end
   
   -- check around
@@ -577,13 +599,12 @@ function sculpture.tool_cut_or_add_point(puncher, itemstack, material, grid, poi
   local add = false
   if material.nub_material then
     -- look for material for add
-    local inv = puncher:get_inventory()
-    local material_item = inv:get_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset)
+    local material_item = sculpture.get_support_item(puncher)
     local material_def = material_item:get_definition()
     
     if material_def and material_def._sculpture_material and (material_def._sculpture_material.name == material.nub_material) then
       if material_def._sculpture_material.change then
-        inv:set_stack(puncher:get_wield_list(), puncher:get_wield_index()+inv_next_row_offset, ItemStack(materials_def._sculpture_material.change))
+        sculpture.set_support_item(puncher, ItemStack(materials_def._sculpture_material.change))
       end
     end
   end
