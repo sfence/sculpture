@@ -319,9 +319,9 @@ function sculpture.find_pointed_part(sculture_grid, from_pos, from_dir, to_pos)
     if point.axis==5 then
       z = z - 1
     end
-    x = math.min(x, 15)
-    y = math.min(y, 15)
-    z = math.min(z, 15)
+    x = math.max(math.min(x, 15), 0)
+    y = math.max(math.min(y, 15), 0)
+    z = math.max(math.min(z, 15), 0)
     if sculture_grid[z][y][x]~=0 then
       pointed = {
         pos = vector.new(x,y,z),
