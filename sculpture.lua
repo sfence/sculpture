@@ -97,6 +97,9 @@ minetest.register_entity("sculpture:sculpture_expo", {
     on_activate = function(self, staticdata)
       local pos = self.object:get_pos()
       local objs = sculpture_on_activate(self, pos)
+      if not objs then
+        return
+      end
       
       local node = minetest.get_node(pos)
       local dir = minetest.facedir_to_dir(node.param2)
@@ -120,7 +123,9 @@ minetest.register_entity("sculpture:sculpture_unfinished", {
     on_activate = function(self, staticdata)
       local pos = self.object:get_pos()
       pos.y = pos.y - 1
-      sculpture_on_activate(self, pos)
+      if not sculpture_on_activate(self, pos) then
+        return
+      end
     end,
     on_punch = function(self, puncher)
       --print("on_punch")
