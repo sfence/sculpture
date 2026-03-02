@@ -1,6 +1,6 @@
 
 sculpture = {
-  translator = minetest.get_translator("sculpture")
+	translator = minetest.get_translator("sculpture")
 }
 
 local modpath = minetest.get_modpath(minetest.get_current_modname())
